@@ -1,5 +1,4 @@
 import copy
-import random
 import sys
 
 from datetime import datetime
@@ -509,11 +508,11 @@ class Hub(with_metaclass(HubMeta)):  # type: ignore
             kwargs.setdefault("hub", self)
             transaction = Transaction(**kwargs)
 
-        client, scope = self._stack[-1]
-
-        if transaction.sampled is None:
-            sample_rate = client and client.options["traces_sample_rate"] or 0
-            transaction.sampled = random.random() < sample_rate
+        # use traces_sample_rate, traces_sampler, and/or inheritance to make a
+        # sampling decision
+        transaction._set_initial_sampling_decision(
+            sampling_context=transaction.to_json()
+        )
 
         if transaction.sampled:
             max_spans = (
