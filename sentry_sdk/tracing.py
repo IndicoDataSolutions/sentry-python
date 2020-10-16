@@ -107,6 +107,9 @@ class Span(object):
         "_span_recorder",
         "hub",
         "_context_manager_state",
+        # TODO: rename this "transaction" once we fully and truly deprecate the
+        # old "transaction" attribute (which was actually the transaction name)?
+        "_containing_transaction",
     )
 
     def __new__(cls, **kwargs):
@@ -162,6 +165,7 @@ class Span(object):
         self.timestamp = None  # type: Optional[datetime]
 
         self._span_recorder = None  # type: Optional[_SpanRecorder]
+        self._containing_transaction = None  # type: Optional[Transaction]
 
     def init_span_recorder(self, maxlen):
         # type: (int) -> None
@@ -208,14 +212,16 @@ class Span(object):
         Start a sub-span from the current span or transaction.
 
         Takes the same arguments as the initializer of :py:class:`Span`. The
-        trace id, sampling decision, and span recorder are inherited from the
-        current span/transaction.
+        trace id, sampling decision, transaction pointer, and span recorder are
+        inherited from the current span/transaction.
         """
         kwargs.setdefault("sampled", self.sampled)
 
         rv = Span(
             trace_id=self.trace_id, span_id=None, parent_span_id=self.span_id, **kwargs
         )
+
+        rv._containing_transaction = self._containing_transaction
 
         rv._span_recorder = recorder = self._span_recorder
         if recorder:
@@ -468,6 +474,10 @@ class Transaction(Span):
             name = kwargs.pop("transaction")
         Span.__init__(self, **kwargs)
         self.name = name
+
+        # transactions (when considered as spans) belong to themselves (when
+        # considered as transactions)
+        self._containing_transaction = self
 
     def __repr__(self):
         # type: () -> str
