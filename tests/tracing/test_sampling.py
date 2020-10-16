@@ -235,4 +235,3 @@ def test_warns_and_sets_sampled_to_false_on_invalid_traces_sampler_return_value(
         transaction = start_transaction(name="dogpark")
         logger.warning.assert_any_call(StringContaining("Given sample rate is invalid"))
         assert transaction.sampled is False
-
