@@ -504,6 +504,7 @@ class Hub(with_metaclass(HubMeta)):  # type: ignore
         When the transaction is finished, it will be sent to Sentry with all its
         finished child spans.
         """
+        # if we haven't been given a transaction, make one
         if transaction is None:
             kwargs.setdefault("hub", self)
             transaction = Transaction(**kwargs)
@@ -514,11 +515,12 @@ class Hub(with_metaclass(HubMeta)):  # type: ignore
             sampling_context=transaction.to_json()
         )
 
+        # we don't bother to keep spans if we already know we're not going to
+        # send the transaction
         if transaction.sampled:
-            max_spans = (
-                client and client.options["_experiments"].get("max_spans") or 1000
+            transaction.init_span_recorder(
+                maxlen=self.client.options["_experiments"].get("max_spans") or 1000
             )
-            transaction.init_span_recorder(maxlen=max_spans)
 
         return transaction
 
