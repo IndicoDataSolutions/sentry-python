@@ -26,12 +26,17 @@ def test_sampling_decided_only_for_transactions(sentry_init, capture_events):
         assert span.sampled is None
 
 
-def test_nested_transaction_sampling_override():
-    with start_transaction(name="outer", sampled=True) as outer_transaction:
-        assert outer_transaction.sampled is True
-        with start_transaction(name="inner", sampled=False) as inner_transaction:
-            assert inner_transaction.sampled is False
-        assert outer_transaction.sampled is True
+@pytest.mark.parametrize("sampled", [True, False])
+def test_nested_transaction_sampling_override(sentry_init, sampled):
+    sentry_init(traces_sample_rate=1.0)
+
+    with start_transaction(name="outer", sampled=sampled) as outer_transaction:
+        assert outer_transaction.sampled is sampled
+        with start_transaction(
+            name="inner", sampled=(not sampled)
+        ) as inner_transaction:
+            assert inner_transaction.sampled is not sampled
+        assert outer_transaction.sampled is sampled
 
 
 def test_no_double_sampling(sentry_init, capture_events):
