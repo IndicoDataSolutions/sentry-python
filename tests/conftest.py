@@ -1,5 +1,6 @@
 import os
 import json
+from types import FunctionType
 
 import pytest
 import jsonschema
@@ -35,6 +36,11 @@ except ImportError:
 
 else:
     del pytest_benchmark
+
+try:
+    from unittest import mock  # python 3.3 and above
+except ImportError:
+    import mock  # python < 3.3
 
 
 @pytest.fixture(autouse=True)
@@ -325,3 +331,54 @@ def render_span_tree():
         return "\n".join(render_span(root_span))
 
     return inner
+
+
+@pytest.fixture(name="Any")
+def make_any():
+    class Any(object):
+        """
+        An object which matches any instance of the class passed to __init__.
+
+        Useful for assert_called_with statements.
+        """
+
+        def __init__(self, target_class):
+            self.target_class = target_class
+
+        def __eq__(self, other):
+            return isinstance(other, self.target_class)
+
+    return Any
+
+
+@pytest.fixture(name="StringContaining")
+def make_string_containing():
+    class StringContaining(object):
+        """
+        An object which matches any string containing the string passed to __init__.
+
+        Useful for assert_called_with statements.
+        """
+
+        def __init__(self, substring):
+            self.substring = substring
+
+        def __eq__(self, test_string):
+            return self.substring in test_string
+
+    return StringContaining
+
+
+@pytest.fixture(name="FunctionMock")
+def function_mock():
+    """
+    Just like a mock.Mock object, but one which always passes an isfunction
+    test.
+    """
+
+    class FunctionMock(mock.Mock):
+        def __init__(self, *args, **kwargs):
+            super(FunctionMock, self).__init__(*args, **kwargs)
+            self.__class__ = FunctionType
+
+    return FunctionMock
