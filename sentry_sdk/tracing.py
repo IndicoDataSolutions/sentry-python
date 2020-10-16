@@ -107,6 +107,9 @@ class Span(object):
         "_span_recorder",
         "hub",
         "_context_manager_state",
+        # TODO: rename this "transaction" once we fully and truly deprecate the
+        # old "transaction" attribute (which was actually the transaction name)?
+        "_containing_transaction",
     )
 
     def __new__(cls, **kwargs):
@@ -402,8 +405,8 @@ class Span(object):
         _maybe_create_breadcrumbs_from_span(hub, self)
         return None
 
-    def to_json(self, client):
-        # type: (Optional[sentry_sdk.Client]) -> Dict[str, Any]
+    def to_json(self):
+        # type: () -> Dict[str, Any]
         rv = {
             "trace_id": self.trace_id,
             "span_id": self.span_id,
@@ -444,11 +447,12 @@ class Span(object):
 
 
 class Transaction(Span):
-    __slots__ = ("name",)
+    __slots__ = ("name", "parent_sampled")
 
     def __init__(
         self,
         name="",  # type: str
+        parent_sampled=None,  # type: Optional[bool]
         **kwargs  # type: Any
     ):
         # type: (...) -> None
@@ -463,6 +467,7 @@ class Transaction(Span):
             name = kwargs.pop("transaction")
         Span.__init__(self, **kwargs)
         self.name = name
+        self.parent_sampled = parent_sampled
 
     def __repr__(self):
         # type: () -> str
@@ -510,7 +515,7 @@ class Transaction(Span):
             return None
 
         finished_spans = [
-            span.to_json(client)
+            span.to_json()
             for span in self._span_recorder.spans
             if span is not self and span.timestamp is not None
         ]
