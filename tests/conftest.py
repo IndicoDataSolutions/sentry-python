@@ -343,7 +343,6 @@ def make_any():
     """
 
     class Any(object):
-
         def __init__(self, target_class):
             self.target_class = target_class
 
@@ -363,7 +362,6 @@ def make_string_containing():
     """
 
     class StringContaining(object):
-
         def __init__(self, substring):
             self.substring = substring
 
