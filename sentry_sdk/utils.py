@@ -916,3 +916,12 @@ class TimeoutThread(threading.Thread):
                 integer_configured_timeout
             )
         )
+
+
+def has_tracing_enabled(options):
+    """
+    Returns True if either traces_sample_rate or traces_sampler is
+    non-zero/defined, False otherwise.
+    """
+
+    return options.get("traces_sample_rate") or options.get("traces_sampler")
