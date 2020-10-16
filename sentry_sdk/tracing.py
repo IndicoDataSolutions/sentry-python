@@ -509,6 +509,7 @@ class Transaction(Span):
 
         return rv
 
+
 def _is_valid_sample_rate(rate):
     """
     Checks the given sample rate to make sure it is valid type and value (a
