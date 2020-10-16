@@ -335,12 +335,14 @@ def render_span_tree():
 
 @pytest.fixture(name="Any")
 def make_any():
-    class Any(object):
-        """
-        An object which matches any instance of the class passed to __init__.
+    """
+    An object which matches any instance of the class passed to the object at
+    instantiation time.
 
-        Useful for assert_called_with statements.
-        """
+    Useful for assert_called_with statements.
+    """
+
+    class Any(object):
 
         def __init__(self, target_class):
             self.target_class = target_class
@@ -353,12 +355,14 @@ def make_any():
 
 @pytest.fixture(name="StringContaining")
 def make_string_containing():
-    class StringContaining(object):
-        """
-        An object which matches any string containing the string passed to __init__.
+    """
+    An object which matches any string containing the substring passed to the
+    object at instantiation time.
 
-        Useful for assert_called_with statements.
-        """
+    Useful for assert_called_with statements.
+    """
+
+    class StringContaining(object):
 
         def __init__(self, substring):
             self.substring = substring
